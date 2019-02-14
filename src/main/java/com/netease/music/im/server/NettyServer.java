@@ -10,6 +10,8 @@ import io.netty.channel.nio.NioEventLoopGroup;
 import io.netty.channel.socket.nio.NioServerSocketChannel;
 import io.netty.channel.socket.nio.NioSocketChannel;
 import io.netty.util.AttributeKey;
+import io.netty.util.concurrent.DefaultEventExecutorGroup;
+import io.netty.util.concurrent.EventExecutorGroup;
 import lombok.extern.slf4j.Slf4j;
 
 /**
@@ -20,8 +22,12 @@ import lombok.extern.slf4j.Slf4j;
 public class NettyServer {
 
     public static void main(String[] args) {
+        // main reactor
         NioEventLoopGroup boss = new NioEventLoopGroup(1);
+        // sub reactor
         NioEventLoopGroup worker = new NioEventLoopGroup(10);
+        // 业务线程池
+        EventExecutorGroup business = new DefaultEventExecutorGroup(16);
 
         ServerBootstrap serverBootstrap = new ServerBootstrap();
         serverBootstrap
@@ -61,6 +67,9 @@ public class NettyServer {
                         // ch.pipeline().addLast(new PacketEncoder());
 
                         // ch.pipeline().addLast(new FirstServerHandler());
+
+                        // @ovo@ 业务线程池, 处理耗时业务, ctx.executor()使用业务线程池, 如果executor为null，就返回channel().eventLoop()
+                        // ch.pipeline().addLast(business, businessChannelHandler);
                     }
                 });
         bind(serverBootstrap, 8080);
